@@ -1,33 +1,42 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pl">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Happy New Year 2026</title>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy New Year</title>
+    <link rel="stylesheet" href="main.css">
+</head>
+<body>
+    <div class="fixed-bg">
+        <canvas></canvas>
+    </div>
 
-    <script type="module" src="./main.js" defer></script>
-  </head>
-  <body>
-    <main>
-      <h1>Odliczanie do 2026</h1>
-      <div id="timer" role="timer">
-        <div>
-          <span id="days">0</span> dni
+    <div class="countdown-container">
+        <div class="countdown-title">Do Nowego Roku</div>
+        <div class="countdown-timer">
+            <div class="time-unit">
+                <span class="time-value" id="days">00</span>
+                <span class="time-label">Dni</span>
+            </div>
+            <div class="time-separator">:</div>
+            <div class="time-unit">
+                <span class="time-value" id="hours">00</span>
+                <span class="time-label">Godz</span>
+            </div>
+            <div class="time-separator">:</div>
+            <div class="time-unit">
+                <span class="time-value" id="minutes">00</span>
+                <span class="time-label">Min</span>
+            </div>
+            <div class="time-separator">:</div>
+            <div class="time-unit">
+                <span class="time-value" id="seconds">00</span>
+                <span class="time-label">Sek</span>
+            </div>
         </div>
-        <div>
-          <span id="hours">0</span> godzin
-        </div>
-        <div>
-          <span id="minutes">0</span> minut
-        </div>
-        <div>
-          <span id="seconds">0</span> sekund
-        </div>
-      </div>
-      <p id="message">
-        Strona odblokuje się dokładnie o północy 1 stycznia 2026 (czas Twojej
-        strefy).
-      </p>
-    </main>
-  </body>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="main.js"></script>
+</body>
 </html>
