@@ -1,4 +1,5 @@
 const arr = [] // particles
+let snowSpeedDivider = 70 // Dzielnik prędkości śniegu (im większy, tym wolniej)
 const c = document.querySelector('canvas')
 const ctx = c.getContext('2d')
 const cw = (c.width = 3000)
@@ -46,7 +47,7 @@ function makeFlake(i, ff) {
 			}
 		)
 		.seek(ff ? Math.random() * 99 : 0) // fast-forward to fill initial state
-		.timeScale(arr[i].s / 100) // time scale based on flake size (zwolnione padanie)
+		.timeScale(arr[i].s / snowSpeedDivider) // time scale based on flake size (zależne od zmiennej)
 }
 
 ctx.fillStyle = '#fff'
@@ -162,6 +163,11 @@ function updateFireworks() {
 	if (now - fireworksStartTime > FIREWORKS_DURATION) {
 		fireworksActive = false
 		fireworks.length = 0
+		// Zatrzymaj dźwięk fajerwerków
+		if (fireworksAudio) {
+			fireworksAudio.pause()
+			fireworksAudio.currentTime = 0
+		}
 		return
 	}
 	
@@ -215,6 +221,14 @@ function startFireworks() {
 	fireworksActive = true
 	fireworksStartTime = Date.now()
 	createFirework(cw / 2, ch / 3) // Pierwszy wybuch
+	
+	// Rozpocznij odtwarzanie dźwięku fajerwerków (tylko jeśli dźwięk nie jest wyciszony)
+	if (fireworksAudio && !isMuted) {
+		fireworksAudio.volume = 0.5 // Ustaw głośność (można dostosować)
+		fireworksAudio.play().catch(err => {
+			console.log('Nie można odtworzyć dźwięku fajerwerków:', err)
+		})
+	}
 }
 
 // Funkcja do aktualizacji pozycji latarni
@@ -331,10 +345,10 @@ function getNewYearDate() {
 	const currentYear = now.getFullYear()
 
 	// Nowy rok następnego roku o północy (1 stycznia)
-	const newYear = new Date(currentYear + 1, 0, 1, 0, 0, 0, 0)
+	//const newYear = new Date(currentYear + 1, 0, 1, 0, 0, 0, 0)
 	
 	// testowy nowy rok	
-	//const newYear = new Date(2025, 11, 11, 2, 10, 0, 0) 
+	const newYear = new Date(2025, 11, 12, 14, 10, 0, 0) 
 															
 
 	return newYear
@@ -363,6 +377,8 @@ function updateCountdown() {
 					countdownContainer.style.display = 'none'
 					// Włącz kolizję z tekstem po zniknięciu timera
 					enableTextCollision = true
+					// Wycisz dźwięk śniegu, gdy tekst jest widoczny
+					updateVolume()
 					// Rozpocznij animację migania lampki
 					startLanternBlinking()
 				}
@@ -419,3 +435,63 @@ function startLanternBlinking() {
 // Inicjalizacja timera
 updateCountdown()
 setInterval(updateCountdown, 1000)
+
+// Obsługa dźwięku
+const audio = document.getElementById('snow-sound')
+const fireworksAudio = document.getElementById('fireworks-sound')
+const soundToggle = document.getElementById('sound-toggle')
+let isMuted = true
+
+function updateVolume() {
+	if (!audio) return
+	
+	// Wycisz dźwięk śniegu, gdy tekst "Happy New 2026" jest widoczny
+	if (enableTextCollision) {
+		audio.volume = 0
+		return
+	}
+	
+	// Jeśli dźwięk jest wyciszony przez użytkownika, nie zmieniaj głośności
+	if (isMuted) {
+		audio.volume = 0
+		return
+	}
+	
+	// Im większy dzielnik (wolniejszy śnieg), tym cichszy dźwięk
+	// Bazowa głośność dla divider=30 to 1.0
+	// Dla divider=100 to 0.3
+	const targetVolume = Math.min(1.0, Math.max(0.1, 30 / snowSpeedDivider))
+	audio.volume = targetVolume
+}
+
+if (soundToggle && audio) {
+	soundToggle.addEventListener('click', () => {
+		isMuted = !isMuted
+		if (isMuted) {
+			// Wycisz oba dźwięki
+			if (audio) {
+				audio.pause()
+			}
+			if (fireworksAudio) {
+				fireworksAudio.pause()
+			}
+			soundToggle.textContent = '🔇'
+			soundToggle.setAttribute('aria-label', 'Włącz dźwięk')
+		} else {
+			// Włącz dźwięki
+			updateVolume()
+			if (audio && !enableTextCollision) {
+				audio.play().catch(e => console.log('Audio play failed:', e))
+			}
+			// Włącz dźwięk fajerwerków tylko jeśli są aktywne
+			if (fireworksAudio && fireworksActive) {
+				fireworksAudio.play().catch(e => console.log('Fireworks audio play failed:', e))
+			}
+			soundToggle.textContent = '🔊'
+			soundToggle.setAttribute('aria-label', 'Wyłącz dźwięk')
+		}
+	})
+}
+
+// Inicjalizacja głośności
+updateVolume()
