@@ -164,10 +164,9 @@ function updateFireworks() {
 		fireworksActive = false
 		fireworks.length = 0
 		// Zatrzymaj dźwięk fajerwerków
-		const fireworksSound = document.getElementById('fireworks-sound')
-		if (fireworksSound) {
-			fireworksSound.pause()
-			fireworksSound.currentTime = 0
+		if (fireworksAudio) {
+			fireworksAudio.pause()
+			fireworksAudio.currentTime = 0
 		}
 		return
 	}
@@ -223,11 +222,10 @@ function startFireworks() {
 	fireworksStartTime = Date.now()
 	createFirework(cw / 2, ch / 3) // Pierwszy wybuch
 	
-	// Rozpocznij odtwarzanie dźwięku fajerwerków
-	const fireworksSound = document.getElementById('fireworks-sound')
-	if (fireworksSound) {
-		fireworksSound.volume = 0.5 // Ustaw głośność (można dostosować)
-		fireworksSound.play().catch(err => {
+	// Rozpocznij odtwarzanie dźwięku fajerwerków (tylko jeśli dźwięk nie jest wyciszony)
+	if (fireworksAudio && !isMuted) {
+		fireworksAudio.volume = 0.5 // Ustaw głośność (można dostosować)
+		fireworksAudio.play().catch(err => {
 			console.log('Nie można odtworzyć dźwięku fajerwerków:', err)
 		})
 	}
@@ -440,6 +438,7 @@ setInterval(updateCountdown, 1000)
 
 // Obsługa dźwięku
 const audio = document.getElementById('snow-sound')
+const fireworksAudio = document.getElementById('fireworks-sound')
 const soundToggle = document.getElementById('sound-toggle')
 let isMuted = true
 
@@ -448,6 +447,12 @@ function updateVolume() {
 	
 	// Wycisz dźwięk śniegu, gdy tekst "Happy New 2026" jest widoczny
 	if (enableTextCollision) {
+		audio.volume = 0
+		return
+	}
+	
+	// Jeśli dźwięk jest wyciszony przez użytkownika, nie zmieniaj głośności
+	if (isMuted) {
 		audio.volume = 0
 		return
 	}
@@ -463,12 +468,25 @@ if (soundToggle && audio) {
 	soundToggle.addEventListener('click', () => {
 		isMuted = !isMuted
 		if (isMuted) {
-			audio.pause()
+			// Wycisz oba dźwięki
+			if (audio) {
+				audio.pause()
+			}
+			if (fireworksAudio) {
+				fireworksAudio.pause()
+			}
 			soundToggle.textContent = '🔇'
 			soundToggle.setAttribute('aria-label', 'Włącz dźwięk')
 		} else {
+			// Włącz dźwięki
 			updateVolume()
-			audio.play().catch(e => console.log('Audio play failed:', e))
+			if (audio && !enableTextCollision) {
+				audio.play().catch(e => console.log('Audio play failed:', e))
+			}
+			// Włącz dźwięk fajerwerków tylko jeśli są aktywne
+			if (fireworksAudio && fireworksActive) {
+				fireworksAudio.play().catch(e => console.log('Fireworks audio play failed:', e))
+			}
 			soundToggle.textContent = '🔊'
 			soundToggle.setAttribute('aria-label', 'Wyłącz dźwięk')
 		}
