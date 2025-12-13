@@ -25,17 +25,37 @@ ctx2.textAlign = 'center'
 ctx2.textBaseline = 'middle'
 ctx2.fillText('Happy New 2026', cw / 2, ch / 2)
 
-for (let i = 0; i < 1300; i++) makeFlake(i, true)
+// Więcej płatków śniegu - zwiększona liczba z 1300 do 2500
+for (let i = 0; i < 2500; i++) makeFlake(i, true)
 
 function makeFlake(i, ff) {
 	arr.push({ i: i, x: 0, x2: 0, y: 0, s: 0 })
+	
+	// 40% płatków koncentruje się nad tekstem (w środkowej części górnej połowy canvas)
+	const isOverText = i < arr.length * 0.4
+	let startX, startY
+	
+	if (isOverText) {
+		// Płatki nad tekstem: koncentracja w środkowej części (nad napisem)
+		// Tekst jest na cw/2, więc koncentrujemy płatki w okolicach środka
+		const textCenterX = cw / 2
+		const textWidth = cw * 0.6 // Szerokość obszaru nad tekstem
+		startX = () => textCenterX - textWidth/2 + textWidth * Math.random()
+		// Start w górnej części (pierwsze 40% wysokości canvas)
+		startY = -15 - Math.random() * 200 // Niektóre płatki zaczynają wyżej
+	} else {
+		// Pozostałe płatki rozłożone normalnie
+		startX = () => -400 + (cw + 800) * Math.random()
+		startY = -15
+	}
+	
 	arr[i].t = gsap
 		.timeline({ repeat: -1, repeatRefresh: true })
 		.fromTo(
 			arr[i],
 			{
-				x: () => -400 + (cw + 800) * Math.random(),
-				y: -15,
+				x: startX,
+				y: startY,
 				s: () => gsap.utils.random(1.8, 7),
 				x2: -500,
 			},
@@ -336,6 +356,12 @@ function render() {
 		ctx.fill()
 	})
 	
+	// Aktualizuj głośność dźwięku na podstawie intensywności padania śniegu
+	// (tylko jeśli dźwięk nie jest wyciszony przez użytkownika)
+	if (!isMuted && audio) {
+		updateVolume()
+	}
+	
 	isRendering = false
 }
 
@@ -348,7 +374,7 @@ function getNewYearDate() {
 	//const newYear = new Date(currentYear + 1, 0, 1, 0, 0, 0, 0)
 	
 	// testowy nowy rok	
-	const newYear = new Date(2025, 11, 12, 14, 10, 0, 0) 
+	const newYear = new Date(2025, 11, 13, 15, 41, 0, 0) 
 															
 
 	return newYear
@@ -377,8 +403,8 @@ function updateCountdown() {
 					countdownContainer.style.display = 'none'
 					// Włącz kolizję z tekstem po zniknięciu timera
 					enableTextCollision = true
-					// Wycisz dźwięk śniegu, gdy tekst jest widoczny
-					updateVolume()
+					// Głośność będzie się automatycznie zmniejszać wraz z intensywnością padania śniegu
+					// (aktualizowana w funkcji render())
 					// Rozpocznij animację migania lampki
 					startLanternBlinking()
 				}
@@ -445,23 +471,45 @@ let isMuted = true
 function updateVolume() {
 	if (!audio) return
 	
-	// Wycisz dźwięk śniegu, gdy tekst "Happy New 2026" jest widoczny
-	if (enableTextCollision) {
-		audio.volume = 0
-		return
-	}
-	
 	// Jeśli dźwięk jest wyciszony przez użytkownika, nie zmieniaj głośności
 	if (isMuted) {
 		audio.volume = 0
 		return
 	}
 	
+	// Oblicz intensywność padania śniegu na podstawie aktywnych płatków
+	let activeFlakes = 0
+	let totalFlakes = arr.length
+	
+	// Policz aktywne płatki (te, które się poruszają)
+	arr.forEach(flake => {
+		if (flake.t && flake.t.isActive()) {
+			activeFlakes++
+		}
+	})
+	
+	// Oblicz intensywność jako procent aktywnych płatków
+	const snowIntensity = totalFlakes > 0 ? activeFlakes / totalFlakes : 0
+	
+	// Bazowa głośność zależna od prędkości śniegu (snowSpeedDivider)
 	// Im większy dzielnik (wolniejszy śnieg), tym cichszy dźwięk
-	// Bazowa głośność dla divider=30 to 1.0
-	// Dla divider=100 to 0.3
-	const targetVolume = Math.min(1.0, Math.max(0.1, 30 / snowSpeedDivider))
-	audio.volume = targetVolume
+	// Bazowa głośność dla divider=30 to 1.0, dla divider=100 to 0.3
+	const baseVolume = Math.min(1.0, Math.max(0.1, 30 / snowSpeedDivider))
+	
+	// Finalna głośność = bazowa głośność * intensywność padania śniegu
+	// Im mniej pada (mniej aktywnych płatków), tym ciszej
+	const targetVolume = baseVolume * snowIntensity
+	
+	// Płynna zmiana głośności (zamiast skokowej)
+	if (audio.volume !== targetVolume) {
+		// Użyj małego kroku dla płynnej zmiany
+		const volumeStep = 0.05
+		if (audio.volume < targetVolume) {
+			audio.volume = Math.min(targetVolume, audio.volume + volumeStep)
+		} else {
+			audio.volume = Math.max(targetVolume, audio.volume - volumeStep)
+		}
+	}
 }
 
 if (soundToggle && audio) {
@@ -495,3 +543,38 @@ if (soundToggle && audio) {
 
 // Inicjalizacja głośności
 updateVolume()
+
+// Slider intensywności śniegu
+const snowSlider = document.getElementById('snow-slider')
+const snowIntensityValue = document.getElementById('snow-intensity-value')
+
+function updateSnowIntensity(divider) {
+	snowSpeedDivider = divider
+	
+	// Aktualizuj time scale dla wszystkich płatków śniegu
+	for (let i = 0; i < arr.length; i++) {
+		if (arr[i].t) {
+			arr[i].t.timeScale(arr[i].s / snowSpeedDivider)
+		}
+	}
+	
+	// Aktualizuj głośność dźwięku
+	updateVolume()
+	
+	// Aktualizuj wyświetlaną wartość (im mniejszy divider, tym więcej śniegu)
+	// divider 30 = 100%, divider 120 = 0%
+	const percentage = Math.round(((120 - divider) / 90) * 100)
+	if (snowIntensityValue) {
+		snowIntensityValue.textContent = percentage + '%'
+	}
+}
+
+if (snowSlider) {
+	// Inicjalizacja wyświetlanej wartości
+	updateSnowIntensity(parseInt(snowSlider.value))
+	
+	snowSlider.addEventListener('input', (e) => {
+		updateSnowIntensity(parseInt(e.target.value))
+	})
+}
+
