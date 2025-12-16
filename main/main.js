@@ -134,8 +134,6 @@ function createFirework(x, y) {
 	]
 	const color = colors[Math.floor(Math.random() * colors.length)]
 	
-	// Losuj typ wybuchu (z większą szansą na duże saluty)
-	// 50% szans na duży, 30% na średni, 20% na mały
 	const explosionType = Math.random()
 	let particleCount, speedBase, sizeBase, decayBase
 	
@@ -357,7 +355,6 @@ function render() {
 	})
 	
 	// Aktualizuj głośność dźwięku na podstawie intensywności padania śniegu
-	// (tylko jeśli dźwięk nie jest wyciszony przez użytkownika)
 	if (!isMuted && audio) {
 		updateVolume()
 	}
@@ -371,10 +368,10 @@ function getNewYearDate() {
 	const currentYear = now.getFullYear()
 
 	// Nowy rok następnego roku o północy (1 stycznia)
-	//const newYear = new Date(currentYear + 1, 0, 1, 0, 0, 0, 0)
+	const newYear = new Date(currentYear + 1, 0, 1, 0, 0, 0, 0)
 	
 	// testowy nowy rok	
-	const newYear = new Date(2025, 11, 13, 15, 41, 0, 0) 
+	//const newYear = new Date(2025, 11, 13, 15, 41, 0, 0) 
 															
 
 	return newYear
@@ -403,9 +400,6 @@ function updateCountdown() {
 					countdownContainer.style.display = 'none'
 					// Włącz kolizję z tekstem po zniknięciu timera
 					enableTextCollision = true
-					// Głośność będzie się automatycznie zmniejszać wraz z intensywnością padania śniegu
-					// (aktualizowana w funkcji render())
-					// Rozpocznij animację migania lampki
 					startLanternBlinking()
 				}
 			})
@@ -490,14 +484,8 @@ function updateVolume() {
 	
 	// Oblicz intensywność jako procent aktywnych płatków
 	const snowIntensity = totalFlakes > 0 ? activeFlakes / totalFlakes : 0
-	
-	// Bazowa głośność zależna od prędkości śniegu (snowSpeedDivider)
-	// Im większy dzielnik (wolniejszy śnieg), tym cichszy dźwięk
-	// Bazowa głośność dla divider=30 to 1.0, dla divider=100 to 0.3
+
 	const baseVolume = Math.min(1.0, Math.max(0.1, 30 / snowSpeedDivider))
-	
-	// Finalna głośność = bazowa głośność * intensywność padania śniegu
-	// Im mniej pada (mniej aktywnych płatków), tym ciszej
 	const targetVolume = baseVolume * snowIntensity
 	
 	// Płynna zmiana głośności (zamiast skokowej)
@@ -560,8 +548,7 @@ function updateSnowIntensity(divider) {
 	
 	// Aktualizuj głośność dźwięku
 	updateVolume()
-	
-	// Aktualizuj wyświetlaną wartość (im mniejszy divider, tym więcej śniegu)
+
 	// divider 30 = 100%, divider 120 = 0%
 	const percentage = Math.round(((120 - divider) / 90) * 100)
 	if (snowIntensityValue) {
