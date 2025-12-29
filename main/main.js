@@ -1,5 +1,5 @@
 const arr = [] // particles
-let snowSpeedDivider = 70 // Dzielnik prędkości śniegu (im większy, tym wolniej)
+let snowSpeedDivider = 100 // Dzielnik prędkości śniegu (im większy, tym wolniej)
 const c = document.querySelector('canvas')
 const ctx = c.getContext('2d')
 const cw = (c.width = 3000)
