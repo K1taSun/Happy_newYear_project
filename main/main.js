@@ -23,7 +23,7 @@ ctx2.fillStyle = '#fff'
 ctx2.font = 'bold 350px Arial, sans-serif'
 ctx2.textAlign = 'center'
 ctx2.textBaseline = 'middle'
-ctx2.fillText('Happy New 2026', cw / 2, ch / 2)
+ctx2.fillText('Happy New 2027', cw / 2, ch / 2)
 
 // Więcej płatków śniegu - zwiększona liczba z 1300 do 2500
 for (let i = 0; i < 2500; i++) makeFlake(i, true)
