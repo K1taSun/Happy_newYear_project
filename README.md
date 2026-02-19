@@ -4,7 +4,9 @@ Prosty i elegancki timer odliczający czas do Nowego Roku 2027. Idealny do udost
 
 
 <p>
-  <img src="https://raw.githubusercontent.com/K1taSun/Happy_newYear_project/refs/heads/main/img/qr.png"  width="55%"/>
+
+  <img src="https://raw.githubusercontent.com/K1taSun/Happy_newYear_project/main/img/qr.png"  width="55%"/>
+
 </p>
 
 ---
